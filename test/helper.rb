@@ -63,3 +63,9 @@ class Account < ActiveRecord::Base
     property :int_prop, :type => :integer
   end
 end
+
+class AdminAccount < Account
+  property_set :settings, Account do
+    property :security_level
+  end
+end

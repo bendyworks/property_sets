@@ -14,7 +14,7 @@ Gem::Specification.new do |s|
   ## the sub! line in the Rakefile
   s.name              = 'property_sets'
   s.version           = '0.5.6'
-  s.date              = '2011-11-30'
+  s.date              = '2011-12-20'
   s.rubyforge_project = 'property_sets'
 
   ## Make sure your summary is short. The description may be as long
@@ -43,13 +43,13 @@ Gem::Specification.new do |s|
   ## Specify any RDoc options here. You'll want to add your README and
   ## LICENSE files to the extra_rdoc_files list.
   s.rdoc_options = ["--charset=UTF-8"]
-  s.extra_rdoc_files = %w[README.rdoc LICENSE.txt]
+  # s.extra_rdoc_files = %w[README.rdoc LICENSE.txt]
 
   ## List your runtime dependencies here. Runtime dependencies are those
   ## that are needed for an end user to actually USE your code.
-  s.add_runtime_dependency("activesupport", ["~> 2.3.14"])
-  s.add_runtime_dependency("activerecord", ["~> 2.3.14"])
-  s.add_runtime_dependency("actionpack", ["~> 2.3.14"])
+  s.add_runtime_dependency("activesupport", [">= 3.0.0"])
+  s.add_runtime_dependency("activerecord", [">= 3.0.0"])
+  s.add_runtime_dependency("actionpack", [">= 3.0.0"])
 
   ## List your development dependencies here. Development dependencies are
   ## those that are only needed during development
@@ -64,9 +64,8 @@ Gem::Specification.new do |s|
   # = MANIFEST =
   s.files = %w[
     Gemfile
-    Gemfile.lock
     LICENSE.txt
-    README.rdoc
+    README.md
     Rakefile
     db/.gitignore
     lib/property_sets.rb
@@ -74,7 +73,6 @@ Gem::Specification.new do |s|
     lib/property_sets/active_record_extension.rb
     lib/property_sets/property_set_model.rb
     property_sets.gemspec
-    test/database.yml
     test/fixtures/account_settings.yml
     test/fixtures/account_texts.yml
     test/fixtures/accounts.yml

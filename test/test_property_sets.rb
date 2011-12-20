@@ -7,6 +7,7 @@ class TestPropertySets < ActiveSupport::TestCase
 
     setup do
       @account = Account.create(:name => "Name")
+      @admin_account = AdminAccount.create(:name => "Name")
     end
 
     should "construct the container class" do
@@ -51,6 +52,23 @@ class TestPropertySets < ActiveSupport::TestCase
       assert_equal nil, @account.settings.bar
       assert_equal true, @account.settings.hep?
       assert_equal 'skep', @account.settings.hep
+    end
+
+    context "subclass lookup" do
+      context "with data" do
+        setup { @admin_account.settings.security_level = "1" }
+
+        should "return the data" do
+          assert_equal "1", @admin_account.settings.lookup(:security_level).value
+        end
+      end
+
+      context "without data" do
+        should "create a new record, returning the default" do
+          assert_equal nil, @admin_account.settings.lookup(:security_level).value
+          assert @admin_account.settings.detect { |p| p.name == "security_level" }
+        end
+      end
     end
 
     context 'querying for a setting that does not exist' do

@@ -1,22 +1,21 @@
 module PropertySets
   module ActiveRecordExtension
     module ClassMethods
-      def property_set(association, &block)
-        unless include?(PropertySets::ActiveRecordExtension::InstanceMethods)
-          self.send(:include, PropertySets::ActiveRecordExtension::InstanceMethods)
-          cattr_accessor :property_set_index
-          self.property_set_index = []
+      def property_set(assc, association_class = self, &block)
+        unless association_class.include?(PropertySets::ActiveRecordExtension::InstanceMethods)
+          association_class.send(:include, PropertySets::ActiveRecordExtension::InstanceMethods)
+          association_class.cattr_accessor :property_set_index
+          association_class.property_set_index = []
         end
 
-        raise "Invalid association name, letters only" unless association.to_s =~ /[a-z]+/
-        self.property_set_index << association
-        self.property_set_index.uniq!
+        raise "Invalid association name, letters only" unless assc.to_s =~ /[a-z]+/
+        association_class.property_set_index << assc
+        association_class.property_set_index.uniq!
 
-        property_class = PropertySets.ensure_property_set_class(association, self)
+        property_class = PropertySets.ensure_property_set_class(assc, association_class)
         property_class.instance_eval(&block)
 
-        has_many association, :class_name => property_class.name, :autosave => true, :dependent => :destroy do
-
+        association_class.has_many assc, :class_name => property_class.name, :autosave => true, :dependent => :destroy do
           # Accepts a name value pair hash { :name => 'value', :pairs => true } and builds a property for each key
           def set(property_pairs, with_protection = false)
             property_pairs.keys.each do |name|
@@ -33,30 +32,30 @@ module PropertySets
             return nil if value.nil?
 
             case type
-              when :string
-                value
-              when :datetime
-                Time.parse(value).in_time_zone
-              when :float
-                value.to_f
-              when :integer
-                value.to_i
-              when :boolean
-                ![ "false", "0", "", "off", "n" ].member?(value.to_s.downcase)
+            when :string
+              value
+            when :datetime
+              Time.parse(value).in_time_zone
+            when :float
+              value.to_f
+            when :integer
+              value.to_i
+            when :boolean
+              ![ "false", "0", "", "off", "n" ].member?(value.to_s.downcase)
             end
           end
 
           def write_value_cast_for_property_set(type, value)
             return nil if value.nil?
             case type
-              when :datetime
-                if value.is_a?(String)
-                  value
-                else
-                  value.in_time_zone("UTC").to_s
-                end
+            when :datetime
+              if value.is_a?(String)
+                value
               else
-                value.to_s
+                value.in_time_zone("UTC").to_s
+              end
+            else
+              value.to_s
             end
           end
 
@@ -101,7 +100,9 @@ module PropertySets
           end
 
           def lookup_without_default(arg)
-            detect { |property| property.name.to_sym == arg.to_sym }
+            detect do |property|
+              property.name && property.name.to_sym == arg.to_sym
+            end
           end
 
           # The finder method which returns the property if present, otherwise a new instance with defaults
@@ -109,7 +110,7 @@ module PropertySets
             instance   = lookup_without_default(arg)
             instance ||= build_default(arg)
 
-            instance.send("#{owner_class_sym}=", @owner) if @owner.new_record?
+            instance.send("#{owner_class_sym}=", @owner) if @owner && @owner.new_record?
 
             instance
           end
@@ -118,7 +119,9 @@ module PropertySets
           #   otherwise a new instance with the default value.
           # It does not have the side effect of adding a new setting object.
           def lookup_or_default(arg)
-            instance = detect { |property| property.name.to_sym == arg.to_sym }
+            instance = detect do |property|
+              property.name && property.name.to_sym == arg.to_sym
+            end
             instance ||= new(:value => default(arg))
           end
         end
@@ -142,10 +145,17 @@ module PropertySets
       end
 
       def update_property_set_attributes(attributes)
-        if attributes && self.class.property_set_index.any?
+        if attributes
           self.class.property_set_index.each do |property_set|
             if property_set_hash = attributes.delete(property_set)
               send(property_set).set(property_set_hash, true)
+            end
+          end
+          if self.class.superclass.respond_to? :property_set_index
+            self.class.superclass.property_set_index.each do |property_set|
+              if property_set_hash = attributes.delete(property_set)
+                send(property_set).set(property_set_hash, true)
+              end
             end
           end
         end
