@@ -10,6 +10,7 @@ module PropertySets
 
         raise "Invalid association name, letters only" unless association.to_s =~ /[a-z]+/
         self.property_set_index << association
+        self.property_set_index.uniq!
 
         property_class = PropertySets.ensure_property_set_class(association, self)
         property_class.instance_eval(&block)
